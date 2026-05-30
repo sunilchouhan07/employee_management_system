@@ -1,13 +1,16 @@
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+const { Pool } = require('pg');
 
-  ssl: {
-    rejectUnauthorized: false
-  }
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+
+    ssl: {
+        require: true,
+        rejectUnauthorized: false
+    }
 });
 
 module.exports = pool;

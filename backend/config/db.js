@@ -13,4 +13,24 @@ const pool = new Pool({
     }
 });
 
+const createTable = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS employees (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        department VARCHAR(255),
+        salary NUMERIC
+      );
+    `);
+
+    console.log("Employees table ready");
+  } catch (err) {
+    console.error("Table creation failed:", err);
+  }
+};
+
+createTable();
+
 module.exports = pool;

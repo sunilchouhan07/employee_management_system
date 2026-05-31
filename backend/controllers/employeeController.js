@@ -11,13 +11,20 @@ const getEmployees = async (
         const employees =
         await Employee.getEmployees();
 
+        console.log(
+            `Employees Fetched: ${employees.length}`
+        );
+
         res.json(employees);
 
     } catch(error) {
-        console.error(error)
-        
+
+        console.error(
+            `Get Employees Error: ${error.message}`
+        );
+
         res.status(500).json({
-            message:error.message
+            message: error.message
         });
 
     }
@@ -45,18 +52,24 @@ const addEmployee = async (
             salary
         );
 
+        console.log(
+            `Employee Created | Name=${name} | Email=${email}`
+        );
+
         res.status(201).json(employee);
 
     } catch(error) {
-        console.error(error);
+
+        console.error(
+            `Create Employee Error: ${error.message}`
+        );
 
         res.status(500).json({
-            message:error.message
+            message: error.message
         });
 
     }
 };
-
 
 const updateEmployee = async (
     req,
@@ -83,19 +96,24 @@ const updateEmployee = async (
             salary
         );
 
+        console.log(
+            `Employee Updated | ID=${id}`
+        );
+
         res.json(employee);
 
     } catch(error) {
 
-        console.error(error);
+        console.error(
+            `Update Employee Error: ${error.message}`
+        );
 
         res.status(500).json({
-            message:error.message
+            message: error.message
         });
 
     }
 };
-
 
 const deleteEmployee = async (
     req,
@@ -109,14 +127,20 @@ const deleteEmployee = async (
         const employee =
         await Employee.deleteEmployee(id);
 
+        console.log(
+            `Employee Deleted | ID=${id}`
+        );
+
         res.json(employee);
 
     } catch(error) {
 
-        console.error(error);
+        console.error(
+            `Delete Employee Error: ${error.message}`
+        );
 
         res.status(500).json({
-            message:error.message
+            message: error.message
         });
 
     }

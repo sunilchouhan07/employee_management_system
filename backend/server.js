@@ -26,6 +26,12 @@ app.use(
     employeeRoutes
 );
 
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "UP"
+    })
+})
+
 app.listen(5000, () => {
 
     console.log(

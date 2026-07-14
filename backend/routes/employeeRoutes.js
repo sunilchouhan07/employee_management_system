@@ -20,6 +20,18 @@ router.get(
     getEmployees
 );
 
+router.get("/stress", (req, res) => {
+
+    let result = 0;
+
+    for (let i = 0; i < 500000000; i++) {
+        result += Math.sqrt(i);
+    }
+
+    res.json({ result });
+
+});
+
 router.post(
     '/',
     addEmployee

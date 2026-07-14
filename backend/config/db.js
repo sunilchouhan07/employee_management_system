@@ -1,21 +1,39 @@
-const { Pool } = require('pg');
+require("dotenv").config();
 
-const poolConfig = {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
-};
+const { Pool } = require("pg");
 
-if (process.env.DB_SSL === "true") {
-    poolConfig.ssl = {
-        require: true,
-        rejectUnauthorized: false
-    };
-}
+console.log("========== DATABASE CONFIG ==========");
+console.log("DB_HOST :", process.env.DB_HOST);
+console.log("DB_PORT :", process.env.DB_PORT);
+console.log("DB_NAME :", process.env.DB_NAME);
+console.log("DB_USER :", process.env.DB_USER);
+console.log("=====================================");
 
-const pool = new Pool(poolConfig);
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl:
+    process.env.DB_SSL === "true"
+      ? {
+          rejectUnauthorized: false,
+        }
+      : false,
+});
+
+pool
+  .connect()
+  .then((client) => {
+    console.log("✅ Connected to PostgreSQL");
+
+    client.release();
+  })
+  .catch((err) => {
+    console.error("❌ PostgreSQL Connection Failed");
+    console.error(err);
+  });
 
 const createTable = async () => {
   try {
@@ -29,9 +47,10 @@ const createTable = async () => {
       );
     `);
 
-    console.log("Employees table ready");
+    console.log("✅ Employees table ready");
   } catch (err) {
-    console.error("Table creation failed:", err);
+    console.error("❌ Table creation failed");
+    console.error(err);
   }
 };
 

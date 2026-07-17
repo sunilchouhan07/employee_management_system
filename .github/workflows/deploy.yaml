@@ -1,0 +1,110 @@
+name: Employee Management CI/CD Pipeline 
+
+on: 
+  push:
+    branches:
+      - main 
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read   
+
+    steps:
+      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::015911059278:role/DevOps-Project
+          role-session-name: GitHubActions
+          aws-region: ap-south-1
+
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4 
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Run Backend Tests
+        working-directory: backend
+        run: |
+          echo "No backend tests configured"
+
+      - name: Backend Dependencies
+        working-directory: backend 
+        run: npm ci 
+
+      - name: Run Frontend Tests
+        working-directory: frontend
+        run: |
+          echo "No frontend tests configured"
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend 
+        run: npm ci 
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build 
+
+      - name: Create Deployment Artifact
+        run: |
+          zip -r employee-management-${{ github.sha }}.zip \
+            backend \
+            frontend/build \
+            database \
+            -x "*.git*" \
+            -x ".github*" \
+            -x "backend/.env"
+
+      - name: Verify Artifact
+        run: |
+          unzip -l employee-management-${{ github.sha }}.zip
+
+
+      - name: Upload Artifact to S3 
+        run: |
+          aws s3 cp \
+            employee-management-${{ github.sha }}.zip \
+            s3://${{secrets.S3_BUCKET }}/dev/
+      
+      - name: Upload Deployment Script
+        working-directory: scripts
+        run: |
+          aws s3 cp \
+            deploy.sh \
+            s3://${{ secrets.S3_BUCKET }}/scripts/deploy.sh
+
+      - name: Verify Artifact and Deploy Script Upload
+        run: |
+          aws s3 ls \
+            s3://${{ secrets.S3_BUCKET }}/dev/
+
+          aws s3 ls \
+            s3://${{ secrets.S3_BUCKET }}/scripts/deploy.sh
+
+
+      - name: Trigger Deployment via SSM 
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=tag:Role,Values=application-server" \
+            --parameters 'commands=[
+              "mkdir -p /opt/scripts",
+              "aws s3 cp s3://${{ secrets.S3_BUCKET }}/scripts/deploy.sh /opt/scripts/deploy.sh",
+              "chmod +x /opt/scripts/deploy.sh",
+              "export S3_BUCKET=${{ secrets.S3_BUCKET }}",
+              "export ARTIFACT_NAME=dev/employee-management-${{ github.sha }}.zip",
+              "bash /opt/scripts/deploy.sh"
+              ]' \
+            --comment "Deploy Employee Management System" \
+            --region ap-south-1

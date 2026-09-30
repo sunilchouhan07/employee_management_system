@@ -33,6 +33,12 @@ function App() {
                         '/employees'
                     );
 
+                console.log("EMPLOYEE API RESPONSE:", response.data);
+                console.log(
+                    "IS ARRAY:",
+                    Array.isArray(response.data)
+                );
+
                 setEmployees(
                     response.data
                 );

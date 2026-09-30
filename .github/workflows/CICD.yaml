@@ -135,6 +135,22 @@ jobs:
             "s3://${FRONTEND_S3_BUCKET}/" \
             --region "${AWS_REGION}"
 
+      - name: Get CloudFront Distribution ID
+        run: |
+          DISTRIBUTION_ID=$(aws ssm get-parameter \
+            --name "/app/${PROJECT}-${ENVIRONMENT}/cloudfront/distribution-id" \
+            --query "Parameter.Value" \
+            --output text)
+
+          echo "DISTRIBUTION_ID=${DISTRIBUTION_ID}" >> "$GITHUB_ENV"
+
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
+            --paths "/*"
+
       
       # -------------------------------
       # Verify artifacts
@@ -151,6 +167,7 @@ jobs:
           aws s3 ls \
           "s3://${FRONTEND_S3_BUCKET}/" \
           --region "${AWS_REGION}"
+
 
   
   CD:

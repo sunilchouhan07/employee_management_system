@@ -59,7 +59,7 @@ function EmployeeForm({
             if (editingEmployee) {
 
                 await api.put(
-                    `/employees/${editingEmployee.id}`,
+                    `/api/employees/${editingEmployee.id}`,
                     form
                 );
 
@@ -74,7 +74,7 @@ function EmployeeForm({
             } else {
 
                 await api.post(
-                    '/employees',
+                    '/api/employees',
                     form
                 );
 

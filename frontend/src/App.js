@@ -30,7 +30,7 @@ function App() {
 
                 const response =
                     await api.get(
-                        '/employees'
+                        '/api/employees'
                     );
 
                 console.log("EMPLOYEE API RESPONSE:", response.data);

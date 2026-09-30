@@ -1,21 +1,7 @@
 # Employee Management System — Application & Deployment
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 A production-style Employee Management System deployed on AWS using a secure, scalable **3-tier architecture** with automated CI/CD.
 
-=======
-# Employee Management System — AWS 3-Tier Architecture
-
-A production-style Employee Management System deployed on AWS using a secure, scalable **3-tier architecture** with automated CI/CD.
-
->>>>>>> bed8b90afb8ad4bedd027512f5d2bb6dff575b29
-=======
-# Employee Management System — AWS 3-Tier Architecture
-
-A production-style Employee Management System deployed on AWS using a secure, scalable **3-tier architecture** with automated CI/CD.
-
->>>>>>> bed8b90afb8ad4bedd027512f5d2bb6dff575b29
 This repository contains the **React frontend, Node.js backend, PostgreSQL integration, and GitHub Actions CI/CD pipeline**. The AWS infrastructure is provisioned separately using Terraform.
 
 ---

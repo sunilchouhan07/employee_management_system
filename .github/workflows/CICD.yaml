@@ -204,6 +204,11 @@ jobs:
       # Frontend
       # -------------------------------
 
+      - name: Check Frontend package-lock.json
+        working-directory: frontend
+        run: |
+          cat package-lock.json
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci 

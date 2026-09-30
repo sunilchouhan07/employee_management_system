@@ -1,80 +1,89 @@
 # Employee Management System — Application & Deployment
 
-Employee Management System (EMS) application with an automated AWS CI/CD pipeline.
+# Employee Management System — AWS 3-Tier Architecture
 
-This repository contains the **frontend, backend, and GitHub Actions workflow** used to build, package, and deploy the application to the AWS infrastructure provisioned through Terraform.
+A production-style Employee Management System deployed on AWS using a secure, scalable **3-tier architecture** with automated CI/CD.
+
+This repository contains the **React frontend, Node.js backend, PostgreSQL integration, and GitHub Actions CI/CD pipeline**. The AWS infrastructure is provisioned separately using Terraform.
 
 ---
 
 # Architecture
 
 ```text
-                         Users
-                           │
-                           ▼
-                      ┌───────────┐
-                      │ CloudFront│
-                      └─────┬─────┘
-                            │
-                 ┌──────────┴──────────┐
-                 │                     │
-                 ▼                     ▼
-           Frontend Assets           /api/*
-                 │                     │
-                 ▼                     ▼
-                S3                    ALB
-                                       │
-                                       ▼
-                                EC2 Auto Scaling
-                                       │
-                                       ▼
-                                Node.js Backend
-                                       │
-                                       ▼
-                                RDS PostgreSQL
+                           Users
+                             │
+                             ▼
+                       ┌─────────────┐
+                       │ CloudFront  │
+                       └──────┬──────┘
+                              │
+                  ┌───────────┴───────────┐
+                  │                       │
+                  ▼                       ▼
+             S3 Frontend               /api/*
+                                          │
+                                          ▼
+                                  ┌─────────────────┐
+                                  │       ALB       │
+                                  └────────┬────────┘
+                                           │
+                                           ▼
+                                  ┌─────────────────┐
+                                  │ EC2 Auto Scaling│
+                                  │      Group      │
+                                  └────────┬────────┘
+                                           │
+                                           ▼
+                                  ┌─────────────────┐
+                                  │ Node.js /       │
+                                  │ Express Backend │
+                                  └────────┬────────┘
+                                           │
+                                           ▼
+                                  ┌─────────────────┐
+                                  │ RDS PostgreSQL  │
+                                  └─────────────────┘
 ```
 
 ---
 
-# Application Stack
+# Technology Stack
 
-## Frontend
+## Application
 
 * React
-* Axios
-* React Scripts
-* HTML / CSS / JavaScript
-
-## Backend
-
 * Node.js
 * Express.js
 * PostgreSQL
+* Axios
 * JWT
 * bcryptjs
-* dotenv
 
 ## AWS
 
-* Amazon S3
 * Amazon CloudFront
+* Amazon S3
 * Application Load Balancer
 * Amazon EC2
+* EC2 Auto Scaling
 * Amazon RDS PostgreSQL
 * AWS Systems Manager
 * AWS Secrets Manager
+* Amazon CloudWatch
 
-## CI/CD
+## DevOps
 
+* Git
+* GitHub
 * GitHub Actions
-* GitHub OIDC
-* Amazon S3
-* AWS Systems Manager
-* CloudFront Cache Invalidation
+* Terraform
+* AWS OIDC
+* Shell Scripting
 
 ---
 
-# Repository Structure
+# Project Structure
 
 ```text
 employee_management_system/
@@ -105,31 +114,34 @@ employee_management_system/
 
 ## Frontend
 
-The React frontend is built as static files and deployed to an Amazon S3 bucket.
+The frontend is developed using React and deployed as static files to Amazon S3.
 
 ```text
-React Application
+React Source Code
        │
        ▼
- npm run build
+   npm run build
        │
        ▼
-frontend/build/
+  frontend/build/
        │
        ▼
-Amazon S3
+  Amazon S3
        │
        ▼
-CloudFront
+   CloudFront
+       │
+       ▼
+     Users
 ```
 
-CloudFront serves the frontend application to users.
+CloudFront provides the public entry point for the frontend application.
 
 ---
 
 ## Backend
 
-The Node.js/Express backend runs on EC2 instances managed by an Auto Scaling Group.
+The backend is built using Node.js and Express.js and runs on EC2 instances managed by an Auto Scaling Group.
 
 ```text
 CloudFront
@@ -150,142 +162,97 @@ RDS PostgreSQL
 
 The backend exposes REST API endpoints under `/api`.
 
-### Example API Endpoints
+### API Endpoints
 
 ```text
-GET    /api/employees
-POST   /api/employees
-PUT    /api/employees/:id
-DELETE /api/employees/:id
-GET    /api/health
+GET     /api/health
+GET     /api/employees
+POST    /api/employees
+PUT     /api/employees/:id
+DELETE  /api/employees/:id
 ```
 
 ---
 
 # CI/CD Pipeline
 
-The deployment pipeline is implemented using **GitHub Actions**.
+GitHub Actions automates the application build and deployment process.
 
-The pipeline follows a **build once, deploy the same artifact** approach.
+The pipeline is triggered using Git version tags.
 
 ```text
-Git Tag
-   │
-   ▼
-GitHub Actions
-   │
-   ├─────────────── CI ───────────────┐
-   │                                  │
-   ▼                                  ▼
-Backend                          Frontend
-npm ci                           npm install
-   │                                  │
-   ▼                                  ▼
-Package ZIP                     npm run build
-   │                                  │
-   └──────────────┬───────────────────┘
-                  │
-                  ▼
-           AWS OIDC Authentication
-                  │
-                  ▼
-           Publish Application
-           ┌────────┴─────────┐
-           │                  │
-           ▼                  ▼
-       Backend S3          Frontend S3
-       Artifact               Build
-           │                  │
-           ▼                  ▼
-      CD Deployment       CloudFront
-           │             Invalidation
-           ▼
-         AWS SSM
-           │
-           ▼
-          EC2
-           │
-           ▼
-      Deploy Script
-           │
-           ▼
-     Node.js Application
+                          Git Tag
+                            │
+                            ▼
+                     GitHub Actions
+                            │
+                     ┌──────┴──────┐
+                     │             │
+                     ▼             ▼
+                  Backend       Frontend
+                  CI Build       CI Build
+                     │             │
+                     ▼             ▼
+               ZIP Artifact     React Build
+                     │             │
+                     ▼             ▼
+                  S3 Bucket      S3 Bucket
+                     │             │
+                     ▼             ▼
+                  SSM → EC2     CloudFront
+                     │          Invalidation
+                     ▼
+              Backend Deployment
 ```
 
----
-
-# GitHub Actions
-
-The workflow is triggered when a version tag is pushed.
-
-```yaml
-on:
-  push:
-    tags:
-      - "v*"
-```
-
-### Create a Release Tag
-
-```bash
-git tag -a v1.0.0 -m "Final EMS application deployment"
-git push origin v1.0.0
-```
-
-This starts the CI/CD pipeline automatically.
+The pipeline follows the **build once, deploy the same artifact** approach.
 
 ---
 
 # CI — Continuous Integration
 
-The CI stage performs the application build and packaging.
-
 ## Backend
 
+The backend dependencies are installed and the application is packaged into a versioned ZIP artifact.
+
+```bash
+npm ci
+```
+
+Example artifact:
+
 ```text
-backend/
-    │
-    ▼
-  npm ci
-    │
-    ▼
-Backend package
-    │
-    ▼
 employee-backend-v1.0.0.zip
-    │
-    ▼
-Amazon S3
 ```
 
-Backend artifacts are stored using versioned filenames:
+The artifact is uploaded to Amazon S3.
 
 ```text
-backend/
-├── employee-backend-v1.0.0.zip
-├── employee-backend-v1.0.1.zip
-└── ...
+S3
+└── backend/
+    ├── employee-backend-v1.0.0.zip
+    ├── employee-backend-v1.0.1.zip
+    └── ...
 ```
-
-This keeps deployment artifacts **immutable** and allows a specific application version to be deployed again when required.
 
 ---
 
 ## Frontend
 
-The React application is built using:
+The React frontend is built using:
 
 ```bash
+npm install
 npm run build
 ```
 
-The generated production files are located in:
+The production build is generated in:
 
 ```text
 frontend/build/
 ```
 
-The build output is uploaded to the frontend S3 bucket.
+The build output is synchronized to the frontend S3 bucket.
 
 ---
 
@@ -295,19 +262,17 @@ After CI completes successfully, the CD stage deploys the application.
 
 ## Backend Deployment
 
-The backend deployment flow is:
-
 ```text
 S3 Backend Artifact
         │
         ▼
-Update SSM Parameter
+SSM Parameter Store
         │
         ▼
 AWS Systems Manager
         │
         ▼
-EC2 Application Server
+EC2 Instance
         │
         ▼
 deploy.sh
@@ -316,31 +281,33 @@ deploy.sh
 Application Release
         │
         ▼
-systemd restart
+systemd
         │
         ▼
 Health Check
 ```
 
-The current application version is stored in **AWS Systems Manager Parameter Store**.
+The current application version is stored in AWS Systems Manager Parameter Store:
 
 ```text
 /app/ems-dev/backend/current-version
 ```
 
-For example:
+Example:
 
 ```text
 v1.0.0
 ```
 
-The EC2 deployment script uses this version to download the corresponding artifact from S3.
+The deployment process uses this version to identify the corresponding S3 artifact.
 
 ---
 
-# Backend Release Structure
+# Versioned Backend Releases
 
-Application releases are maintained separately on the EC2 instance.
+Backend releases are maintained separately on the EC2 application server.
+
+Example:
 
 ```text
 /opt/employee-app/
@@ -358,13 +325,13 @@ Application releases are maintained separately on the EC2 instance.
 
 The `current` symlink points to the active application release.
 
-This allows the deployment process to maintain **versioned releases** instead of replacing application files directly.
+This provides clear application version tracking on the EC2 instance.
 
 ---
 
 # Frontend Deployment
 
-The frontend build is uploaded to Amazon S3.
+The frontend deployment process is:
 
 ```text
 React Source
@@ -382,7 +349,7 @@ Amazon S3
 CloudFront
 ```
 
-After uploading a new frontend build, the workflow creates a CloudFront cache invalidation.
+After the new frontend files are uploaded, the pipeline creates a CloudFront cache invalidation.
 
 ```bash
 aws cloudfront create-invalidation \
@@ -390,7 +357,7 @@ aws cloudfront create-invalidation \
   --paths "/*"
 ```
 
-The CloudFront distribution ID is retrieved dynamically from **AWS Systems Manager Parameter Store** rather than being hardcoded in the workflow.
+The CloudFront distribution ID is retrieved dynamically from AWS Systems Manager Parameter Store instead of being hardcoded in the GitHub Actions workflow.
 
 ---
 
@@ -408,13 +375,11 @@ GitHub OIDC Token
 AWS IAM
       │
       ▼
-GitHub CI IAM Role
+GitHub CI Role
       │
       ▼
 Temporary AWS Credentials
 ```
-
-No long-lived AWS access keys are stored in GitHub.
 
 The workflow uses:
 
@@ -424,59 +389,37 @@ permissions:
   id-token: write
 ```
 
-AWS credentials are configured using:
-
-```yaml
-uses: aws-actions/configure-aws-credentials@v4
-```
+No long-lived AWS access keys are stored in GitHub.
 
 ---
 
-# Deployment Permissions
+# Deployment Security
 
-The GitHub Actions IAM role is used for application deployment operations such as:
+The application deployment uses separate permissions for GitHub Actions and EC2.
+
+## GitHub Actions
+
+The GitHub CI role is used for:
 
 * Uploading backend artifacts to S3
-* Uploading frontend build files to S3
-* Reading the CloudFront distribution ID from SSM
-* Updating the current application version in SSM
-* Sending deployment commands through AWS Systems Manager
-* Monitoring SSM command execution
-* Creating CloudFront cache invalidations
+* Uploading frontend files to S3
+* Reading deployment parameters from SSM
+* Updating the current application version
+* Sending commands through AWS Systems Manager
+* Monitoring deployment commands
+* Creating CloudFront invalidations
 
-The EC2 instance uses its own IAM role for application-side AWS operations.
+## EC2
 
----
+The EC2 instance role is used for application-side AWS operations such as accessing deployment artifacts and required configuration.
 
-# Environment Configuration
-
-The current deployment environment is:
-
-```text
-Environment : dev
-AWS Region  : ap-south-1
-Project     : ems
-```
-
-Application deployment parameters follow the environment-aware naming convention:
-
-```text
-/app/<project>-<environment>/
-```
-
-Example:
-
-```text
-/app/ems-dev/backend/current-version
-```
-
-This structure allows the deployment workflow to be extended to additional environments without changing the application architecture.
+Sensitive application configuration is not committed to the repository.
 
 ---
 
 # Application Configuration
 
-The frontend API endpoint is configured at build time.
+The frontend API endpoint is configured during the React build.
 
 Example:
 
@@ -484,7 +427,7 @@ Example:
 REACT_APP_API_URL=https://<cloudfront-domain>
 ```
 
-The frontend API client uses:
+The Axios client uses:
 
 ```javascript
 const api = axios.create({
@@ -492,19 +435,22 @@ const api = axios.create({
 });
 ```
 
-Therefore:
+Therefore an API request such as:
 
 ```text
 /api/employees
 ```
 
-is routed through:
+flows through:
 
 ```text
 CloudFront
     │
     ▼
 ALB
+    │
+    ▼
+EC2
     │
     ▼
 Node.js Backend
@@ -514,26 +460,46 @@ Node.js Backend
 
 # Backend Configuration
 
-Sensitive backend configuration is not stored in the Git repository.
+Sensitive backend configuration is kept outside the Git repository.
 
-The backend retrieves configuration from AWS services during deployment/runtime.
-
-The deployment process uses:
+The deployment process uses AWS services for configuration and secrets management:
 
 * AWS Systems Manager Parameter Store
 * AWS Secrets Manager
 
-Database credentials and other sensitive values are therefore kept outside the application source code.
+Database credentials and other sensitive values are not stored directly in application source code.
 
 ---
 
-# Deployment Workflow
+# Environment
+
+Current implementation:
+
+```text
+Project      : ems
+Environment  : dev
+AWS Region   : ap-south-1
+```
+
+Environment-aware naming is used for AWS parameters and resources.
+
+Example:
+
+```text
+/app/ems-dev/backend/current-version
+```
+
+The deployment design can be extended to additional environments without changing the application architecture.
+
+---
+
+# Deployment Process
 
 ## 1. Make Application Changes
 
-Modify the frontend or backend application.
+Update the React frontend or Node.js backend.
 
-## 2. Commit Changes
+## 2. Commit the Changes
 
 ```bash
 git add .
@@ -541,60 +507,44 @@ git commit -m "feat: update employee management application"
 git push origin main
 ```
 
-## 3. Create a Version Tag
+## 3. Create a Release Tag
 
 ```bash
 git tag -a v1.0.0 -m "EMS application release v1.0.0"
 git push origin v1.0.0
 ```
 
-## 4. GitHub Actions Starts
+## 4. CI Starts Automatically
 
-The tag triggers the CI/CD workflow.
+The GitHub Actions workflow:
 
-## 5. CI Builds the Application
+* Installs dependencies
+* Builds the backend package
+* Builds the React frontend
+* Publishes artifacts to S3
 
-```text
-Backend  → ZIP artifact
-Frontend → Production build
-```
+## 5. CD Starts After CI
 
-## 6. Artifacts Are Published
+The deployment stage:
 
-```text
-Backend  → S3
-Frontend → S3
-```
-
-## 7. CD Deploys the Backend
-
-```text
-SSM → EC2 → deploy.sh → systemd → health check
-```
-
-## 8. CloudFront Cache Is Invalidated
-
-```text
-S3 frontend
-     │
-     ▼
-CloudFront invalidation
-     │
-     ▼
-Latest frontend available
-```
+* Verifies the backend artifact
+* Updates the SSM application version
+* Sends the deployment command through SSM
+* Deploys the backend to EC2
+* Performs deployment status monitoring
+* Invalidates CloudFront cache
 
 ---
 
 # Deployment Verification
 
-After deployment, the backend health endpoint can be used to verify the application.
+The backend provides a health endpoint:
 
 ```text
 GET /api/health
 ```
 
-Expected response:
+Example response:
 
 ```json
 {
@@ -602,9 +552,9 @@ Expected response:
 }
 ```
 
-The deployment pipeline also monitors the AWS Systems Manager command status.
+The deployment workflow also monitors the AWS Systems Manager command execution.
 
-Deployment is considered unsuccessful if the SSM command returns:
+Deployment failures such as the following cause the workflow to fail:
 
 ```text
 Failed
@@ -616,9 +566,9 @@ TimedOut
 
 # Versioning
 
-Application releases use Git tags.
+Application releases are versioned using Git tags.
 
-Example:
+Examples:
 
 ```text
 v1.0.0
@@ -626,7 +576,7 @@ v1.0.1
 v1.1.0
 ```
 
-The same version is used for the backend artifact.
+The backend artifact uses the same application version.
 
 Example:
 
@@ -634,7 +584,7 @@ Example:
 employee-backend-v1.0.0.zip
 ```
 
-This provides traceability between:
+This provides traceability across:
 
 ```text
 Git Commit
@@ -653,57 +603,57 @@ EC2 Release
 
 # Repository Separation
 
-The project uses separate repositories for infrastructure and application deployment.
+The project uses two separate repositories.
+
+## Application Repository
+
+This repository contains:
+
+* React frontend
+* Node.js backend
+* Application configuration
+* GitHub Actions CI/CD
+* Application packaging
+* Application deployment workflow
 
 ## Infrastructure Repository
 
-Responsible for:
+The separate Terraform repository contains:
 
-* Terraform
 * VPC
-* Subnets
+* Public and private subnets
 * Route tables
+* Internet Gateway
+* NAT Gateway
 * Security groups
-* ALB
+* Application Load Balancer
 * EC2 Auto Scaling
-* RDS
+* RDS PostgreSQL
 * S3
 * CloudFront
 * IAM
 * SSM
-* Monitoring
-* AWS infrastructure lifecycle
+* Monitoring infrastructure
 
-## Application Repository
-
-Responsible for:
-
-* React frontend
-* Node.js backend
-* Application source code
-* Application packaging
-* GitHub Actions CI/CD
-* Application deployment
-
-This separation keeps **infrastructure lifecycle** and **application lifecycle** independent.
+This separation keeps **application lifecycle** and **infrastructure lifecycle** independent.
 
 ---
 
 # Related Repository
 
-## Infrastructure Repository
+## AWS Infrastructure
 
-The AWS infrastructure used by this application is maintained in a separate Terraform repository.
+The AWS infrastructure required by this application is provisioned using Terraform in a separate repository.
 
-```text
-Employee Management System — AWS Infrastructure
-```
+**EMS AWS Infrastructure Repository:**
 
-The infrastructure repository provisions the AWS resources required by this application.
+`https://github.com/sunilchouhan07/aws-devops-3tier-infra`
+
+The infrastructure repository contains the Terraform modules and AWS resource definitions required to run this application.
 
 ---
 
-# Key Deployment Principles
+# Key Design Principles
 
 ## Build Once, Deploy the Same Artifact
 
@@ -721,7 +671,7 @@ S3
 Deployment
 ```
 
-## Immutable Application Artifacts
+## Immutable Backend Artifacts
 
 Backend releases use versioned artifact names:
 
@@ -732,19 +682,19 @@ employee-backend-v1.0.1.zip
 
 ## OIDC Authentication
 
-GitHub Actions uses AWS OIDC instead of storing long-lived AWS access keys.
+GitHub Actions uses AWS OIDC authentication instead of long-lived AWS access keys.
+
+## Automated Deployment
+
+Backend deployment is performed through AWS Systems Manager rather than manually connecting to EC2 through SSH.
 
 ## Environment-Aware Configuration
 
-AWS resources and parameters use project/environment naming:
+Application deployment parameters follow the project/environment naming convention:
 
 ```text
 ems-dev
 ```
-
-## Automated Deployment
-
-Application deployment is performed through **GitHub Actions and AWS Systems Manager** without manually SSHing into EC2 instances.
 
 ---
 
@@ -756,14 +706,17 @@ Application deployment is performed through **GitHub Actions and AWS Systems Man
 | Backend         | Node.js, Express.js       |
 | Database        | PostgreSQL                |
 | Cloud           | AWS                       |
-| Storage         | Amazon S3                 |
+| Object Storage  | Amazon S3                 |
 | CDN             | Amazon CloudFront         |
 | Compute         | Amazon EC2                |
 | Load Balancing  | Application Load Balancer |
+| Database        | Amazon RDS PostgreSQL     |
 | Deployment      | AWS Systems Manager       |
 | Secrets         | AWS Secrets Manager       |
+| Monitoring      | Amazon CloudWatch         |
 | CI/CD           | GitHub Actions            |
 | Authentication  | GitHub OIDC + AWS IAM     |
+| Infrastructure  | Terraform                 |
 | Version Control | Git / GitHub              |
 
 ---
@@ -771,16 +724,17 @@ Application deployment is performed through **GitHub Actions and AWS Systems Man
 # Project Status
 
 ```text
-Application          : Completed
-Backend Deployment   : Automated
-Frontend Deployment  : Automated
-CI/CD Pipeline       : Implemented
-AWS OIDC             : Configured
-S3 Artifact Storage  : Configured
-SSM Deployment       : Configured
-CloudFront Routing   : Configured
-Cache Invalidation   : Automated
-Health Check         : Implemented
+Application              : Completed
+Backend Deployment       : Automated
+Frontend Deployment      : Automated
+CI/CD Pipeline           : Implemented
+AWS OIDC                 : Configured
+S3 Artifact Storage      : Configured
+SSM Deployment           : Configured
+CloudFront Routing       : Configured
+CloudFront Invalidation  : Automated
+Health Check             : Implemented
+CloudWatch Monitoring    : Implemented
 ```
 
 ---
@@ -789,6 +743,8 @@ Health Check         : Implemented
 
 **Sunil Chouhan**
 
-Cloud Engineer Intern | AWS | Terraform | CI/CD
+Cloud Engineer Intern
+
+AWS | Terraform | CI/CD | Kubernetes
 
 B.Tech — Cloud Computing

@@ -20,7 +20,7 @@ function EmployeeList({
             try {
 
                 await api.delete(
-                    `/employees/${id}`
+                    `/api/employees/${id}`
                 );
 
                 refresh();

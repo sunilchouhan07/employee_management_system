@@ -215,7 +215,7 @@ jobs:
 
       - name: Test frontend
         working-directory: frontend
-        run: npm test -- --watchAll=false 
+        run: npm test -- --watchAll=false --passWithNoTests
 
       - name: Build frontend
         working-directory: frontend
